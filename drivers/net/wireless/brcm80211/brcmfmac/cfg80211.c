@@ -2647,7 +2647,7 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
 	bss = cfg80211_inform_bss(wiphy, notify_channel,
 				  CFG80211_BSS_FTYPE_UNKNOWN,
 				  (const u8 *)bi->BSSID,
-				  0, notify_capability,
+				  ktime_get_boot_ns(), notify_capability,
 				  notify_interval, notify_ie,
 				  notify_ielen, notify_signal,
 				  GFP_KERNEL);
@@ -2754,10 +2754,10 @@ static s32 brcmf_inform_ibss(struct brcmf_cfg80211_info *cfg,
 	brcmf_dbg(CONN, "signal: %d\n", notify_signal);
 
 	bss = cfg80211_inform_bss(wiphy, notify_channel,
-				  CFG80211_BSS_FTYPE_UNKNOWN, bssid, 0,
-				  notify_capability, notify_interval,
-				  notify_ie, notify_ielen, notify_signal,
-				  GFP_KERNEL);
+				  CFG80211_BSS_FTYPE_UNKNOWN, bssid,
+				  ktime_get_boot_ns(), notify_capability,
+				  notify_interval, notify_ie, notify_ielen,
+				  notify_signal, GFP_KERNEL);
 
 	if (!bss) {
 		err = -ENOMEM;
