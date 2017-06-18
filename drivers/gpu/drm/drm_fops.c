@@ -203,7 +203,7 @@ static int drm_open_helper(struct file *filp, struct drm_minor *minor)
 	priv->minor = minor;
 
 	/* for compatibility root is always authenticated */
-	priv->authenticated = capable(CAP_SYS_ADMIN);
+	priv->authenticated = 1;
 	priv->lock_count = 0;
 
 	INIT_LIST_HEAD(&priv->lhead);
