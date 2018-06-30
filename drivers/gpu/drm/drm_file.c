@@ -127,7 +127,7 @@ struct drm_file *drm_file_alloc(struct drm_minor *minor)
 	file->minor = minor;
 
 	/* for compatibility root is always authenticated */
-	file->authenticated = capable(CAP_SYS_ADMIN);
+	file->authenticated = 1;
 	file->lock_count = 0;
 
 	INIT_LIST_HEAD(&file->lhead);

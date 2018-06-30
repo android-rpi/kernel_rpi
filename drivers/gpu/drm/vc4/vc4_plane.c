@@ -45,6 +45,10 @@ static const struct hvs_format {
 		.pixel_order = HVS_PIXEL_ORDER_ARGB,
 	},
 	{
+		.drm = DRM_FORMAT_RGBA8888, .hvs = HVS_PIXEL_FORMAT_RGBA8888,
+		.pixel_order = HVS_PIXEL_ORDER_ARGB,
+	},
+	{
 		.drm = DRM_FORMAT_XBGR8888, .hvs = HVS_PIXEL_FORMAT_RGBA8888,
 		.pixel_order = HVS_PIXEL_ORDER_ARGB,
 	},
@@ -1027,6 +1031,7 @@ static bool vc4_format_mod_supported(struct drm_plane *plane,
 	case DRM_FORMAT_ARGB8888:
 	case DRM_FORMAT_ABGR8888:
 	case DRM_FORMAT_XBGR8888:
+	case DRM_FORMAT_RGBA8888:
 	case DRM_FORMAT_RGB565:
 	case DRM_FORMAT_BGR565:
 	case DRM_FORMAT_ARGB1555:
