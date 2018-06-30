@@ -46,6 +46,10 @@ static const struct hvs_format {
 		.pixel_order = HVS_PIXEL_ORDER_ARGB, .has_alpha = true,
 	},
 	{
+		.drm = DRM_FORMAT_RGBA8888, .hvs = HVS_PIXEL_FORMAT_RGBA8888,
+		.pixel_order = HVS_PIXEL_ORDER_ARGB, .has_alpha = true,
+	},
+	{
 		.drm = DRM_FORMAT_XBGR8888, .hvs = HVS_PIXEL_FORMAT_RGBA8888,
 		.pixel_order = HVS_PIXEL_ORDER_ARGB, .has_alpha = false,
 	},
