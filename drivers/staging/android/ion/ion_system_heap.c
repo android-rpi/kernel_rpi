@@ -27,7 +27,7 @@
 #include "ion_priv.h"
 
 static gfp_t high_order_gfp_flags = (GFP_HIGHUSER | __GFP_ZERO | __GFP_NOWARN |
-				     __GFP_NORETRY) & ~__GFP_DIRECT_RECLAIM;
+				     __GFP_NORETRY) & ~__GFP_RECLAIM;
 static gfp_t low_order_gfp_flags  = (GFP_HIGHUSER | __GFP_ZERO | __GFP_NOWARN);
 static const unsigned int orders[] = {8, 4, 0};
 static const int num_orders = ARRAY_SIZE(orders);
@@ -83,10 +83,12 @@ static void free_buffer_page(struct ion_system_heap *heap,
 	unsigned int order = compound_order(page);
 	bool cached = ion_buffer_cached(buffer);
 
-	if (!cached && !(buffer->private_flags & ION_PRIV_FLAG_SHRINKER_FREE)) {
+	if (!cached) {
 		struct ion_page_pool *pool = heap->pools[order_to_index(order)];
-
-		ion_page_pool_free(pool, page);
+		if (buffer->private_flags & ION_PRIV_FLAG_SHRINKER_FREE)
+			ion_page_pool_free_immediate(pool, page);
+		else
+			ion_page_pool_free(pool, page);
 	} else {
 		__free_pages(page, order);
 	}

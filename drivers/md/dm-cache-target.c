@@ -118,14 +118,12 @@ static void iot_io_end(struct io_tracker *iot, sector_t len)
  */
 struct dm_hook_info {
 	bio_end_io_t *bi_end_io;
-	void *bi_private;
 };
 
 static void dm_hook_bio(struct dm_hook_info *h, struct bio *bio,
 			bio_end_io_t *bi_end_io, void *bi_private)
 {
 	h->bi_end_io = bio->bi_end_io;
-	h->bi_private = bio->bi_private;
 
 	bio->bi_end_io = bi_end_io;
 	bio->bi_private = bi_private;
@@ -134,7 +132,6 @@ static void dm_hook_bio(struct dm_hook_info *h, struct bio *bio,
 static void dm_unhook_bio(struct dm_hook_info *h, struct bio *bio)
 {
 	bio->bi_end_io = h->bi_end_io;
-	bio->bi_private = h->bi_private;
 }
 
 /*----------------------------------------------------------------*/
@@ -251,7 +248,7 @@ struct cache {
 	/*
 	 * Fields for converting from sectors to blocks.
 	 */
-	uint32_t sectors_per_block;
+	sector_t sectors_per_block;
 	int sectors_per_block_shift;
 
 	spinlock_t lock;
@@ -3547,11 +3544,11 @@ static void cache_status(struct dm_target *ti, status_type_t type,
 
 		residency = policy_residency(cache->policy);
 
-		DMEMIT("%u %llu/%llu %u %llu/%llu %u %u %u %u %u %u %lu ",
+		DMEMIT("%u %llu/%llu %llu %llu/%llu %u %u %u %u %u %u %lu ",
 		       (unsigned)DM_CACHE_METADATA_BLOCK_SIZE,
 		       (unsigned long long)(nr_blocks_metadata - nr_free_blocks_metadata),
 		       (unsigned long long)nr_blocks_metadata,
-		       cache->sectors_per_block,
+		       (unsigned long long)cache->sectors_per_block,
 		       (unsigned long long) from_cblock(residency),
 		       (unsigned long long) from_cblock(cache->cache_size),
 		       (unsigned) atomic_read(&cache->stats.read_hit),

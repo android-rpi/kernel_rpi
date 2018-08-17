@@ -127,7 +127,7 @@ int timer_migration_handler(struct ctl_table *table, int write,
 	int ret;
 
 	mutex_lock(&mutex);
-	ret = proc_dointvec(table, write, buffer, lenp, ppos);
+	ret = proc_dointvec_minmax(table, write, buffer, lenp, ppos);
 	if (!ret && write)
 		timers_update_migration(false);
 	mutex_unlock(&mutex);
@@ -764,8 +764,15 @@ static struct tvec_base *lock_timer_base(struct timer_list *timer,
 	__acquires(timer->base->lock)
 {
 	for (;;) {
-		u32 tf = timer->flags;
 		struct tvec_base *base;
+		u32 tf;
+
+		/*
+		 * We need to use READ_ONCE() here, otherwise the compiler
+		 * might re-read @tf between the check for TIMER_MIGRATING
+		 * and spin_lock().
+		 */
+		tf = READ_ONCE(timer->flags);
 
 		if (!(tf & TIMER_MIGRATING)) {
 			base = per_cpu_ptr(&tvec_bases, tf & TIMER_CPUMASK);
@@ -1698,10 +1705,10 @@ EXPORT_SYMBOL(msleep_interruptible);
 static void __sched do_usleep_range(unsigned long min, unsigned long max)
 {
 	ktime_t kmin;
-	unsigned long delta;
+	u64 delta;
 
 	kmin = ktime_set(0, min * NSEC_PER_USEC);
-	delta = (max - min) * NSEC_PER_USEC;
+	delta = (u64)(max - min) * NSEC_PER_USEC;
 	schedule_hrtimeout_range(&kmin, delta, HRTIMER_MODE_REL);
 }
 

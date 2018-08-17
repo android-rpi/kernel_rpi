@@ -26,9 +26,32 @@
  * The memory barriers are implicit with the load-acquire and store-release
  * instructions.
  */
+static inline void arch_spin_unlock_wait(arch_spinlock_t *lock)
+{
+	unsigned int tmp;
+	arch_spinlock_t lockval;
 
-#define arch_spin_unlock_wait(lock) \
-	do { while (arch_spin_is_locked(lock)) cpu_relax(); } while (0)
+	asm volatile(
+"	sevl\n"
+"1:	wfe\n"
+"2:	ldaxr	%w0, %2\n"
+"	eor	%w1, %w0, %w0, ror #16\n"
+"	cbnz	%w1, 1b\n"
+	/* Serialise against any concurrent lockers */
+	ARM64_LSE_ATOMIC_INSN(
+	/* LL/SC */
+"	stxr	%w1, %w0, %2\n"
+"	nop\n"
+"	nop\n",
+	/* LSE atomics */
+"	mov	%w1, %w0\n"
+"	cas	%w0, %w0, %2\n"
+"	eor	%w1, %w1, %w0\n")
+"	cbnz	%w1, 2b\n"
+	: "=&r" (lockval), "=&r" (tmp), "+Q" (*lock)
+	:
+	: "memory");
+}
 
 #define arch_spin_lock_flags(lock, flags) arch_spin_lock(lock)
 
@@ -94,8 +117,8 @@ static inline int arch_spin_trylock(arch_spinlock_t *lock)
 	"	cbnz	%w1, 1f\n"
 	"	add	%w1, %w0, %3\n"
 	"	casa	%w0, %w1, %2\n"
-	"	and	%w1, %w1, #0xffff\n"
-	"	eor	%w1, %w1, %w0, lsr #16\n"
+	"	sub	%w1, %w1, %3\n"
+	"	eor	%w1, %w1, %w0\n"
 	"1:")
 	: "=&r" (lockval), "=&r" (tmp), "+Q" (*lock)
 	: "I" (1 << TICKET_SHIFT)
